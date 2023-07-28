@@ -1,0 +1,44 @@
+
+PROTOCOL.DOWN 
+
+          000 -  $0 = Good Transfer
+
+          001 -  $1 = Header Error (timed out waiting for initial block)
+
+          003 -  $3 = Footer Error (retried too many times sending Ascii
+                      Express style footer block)
+
+          010 -  $a = got 10 consecutive errors in a row, aborted transfer
+
+          024 - $18 = <can> character -- transfer was aborted by receiver
+
+          155 - $9b = <esc> character -- transfer was aborted by sysop
+
+          254 - $fe = transfer was aborted on last block (this can be used to
+                      detect "protocol cheaters")
+
+          255 - $ff = "other" error -- most likely some sort of syntax error
+                      (check the values passed to the driver)
+
+
+PROTOCOL.UP 
+
+
+          001 -  $1 = Header Error (retried too many times for header block
+                      or simply timed out waiting)
+
+          002 -  $2 = Block Error (retried too many times for data block)
+
+          003 -  $3 = Footer Error (retried too many times for Ascii Express
+                      style footer block)
+
+          024 - $18 = <can> character -- transfer was aborted by receiver
+
+          071 - $47 = Duplicate filename (25 rename retries done)
+
+          254 - $9b = <esc> character -- transfer was aborted by sysop
+
+          255 - $ff = "other" error -- most likely some sort of syntax error
+                      (check the values passed to the driver)
+
+  All Others are Prodos MLI errors.  Check your Charts.                      

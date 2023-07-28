@@ -1,0 +1,446 @@
+; *******************
+; GBBS "Pro" V:2.3
+; Copyright 1980-2023
+; Kevin M. Smallwood
+; *******************
+
+; email segment - 12/19/2022
+; Original code written by Andy Nicholas
+
+ public mailread
+
+ on nocar goto link.term
+ on error goto error
+
+mail
+ gosub time:print \"["x$"]["on$"Mail Level"off$"] Option (?=Help)";
+ l1$="BDQRST+?":if info(5) l1$=l1$+"FLU"
+ gosub getone:push mail
+mail.cmd
+ if i$="B" print "Browse mailbox":goto browse
+ if i$="D" print "Delete mailbox":goto delete
+ if i$="Q" print "Quit":pop:goto link.main
+ if i$="R" print "Read mail":goto read
+ if i$="S" print "Send mail":goto send
+ if i$="T" print "Terminate":goto terminate
+ if i$="?" print "Menu":goto menu
+ if i$="+" print "Dump mail":goto read
+
+ if i$="F" print "Read Feedback":mb$="g:feedback":goto read1
+ if i$="L" print "Browse Feedback":mb$="g:feedback":goto browse1
+ if i$="U" print "Show users with mail":goto userlist
+
+menu
+ f$="b:mnu.mail.80":if edit(3)<79 f$="b:mnu.mail.40"
+menu.1
+ open #1,f$:input #1,x$:setint(" "):for l=1 to len(x$)
+ addint(mid$(x$,l,1)):next:print \sc$\
+ copy #1:if key(3) goto menu.key
+ a=key(0):close:setint("")
+ if not info(5) pop:goto mail
+ f$="b:mnu.mails.80":if edit(3)<79 f$="b:mnu.mails.40"
+ copy f$:pop:goto mail
+menu.key
+ close:setint(""):a=key(0)
+ if (a>96) and (a<123) a=a-32
+ if a=32 pop:goto mail
+ print:i$=chr$(a):print i$:goto mail.cmd
+
+;link to utility segment for help
+dispatch
+ y$="a:mail.seg":z$="mail"
+ link "a:util.seg","dispatch"
+
+; terminate from system and recycle
+terminate
+ print \"Terminate from "sn$
+ print \"Are you sure";:yn=2:gosub getyn
+ if i$<>"Y" return
+
+link.term
+ link "a:main.seg","term1"
+
+link.main
+ link "a:main.seg","fromseg"
+
+;send mail to a user
+send
+ if not flag(1) print \"Only validated users may send mail":return
+ input @2 \"To who: Name, #, B)ulk mailing, <CR>: "i$:if i$="" return
+ if i$="B" goto bulk
+ if left$(i$,1)="#" then i$=mid$(i$,2)
+ a=val(i$):if not a gosub send2
+ if (a<1) or (a>nu) print \"Sorry, No such user":return
+ move ram,58 to ram2
+ open #1,"b:users":position #1,128,a
+ input #1,d1$,d2$\d3$:position #1,128,a,70:read #1,ram,58
+ if d1$="" close:move ram2,58 to ram:print \on$"Sorry, No such user"of$:return
+ print \"Send to "d3$\"Last on - "when$;
+ yn=1:gosub getyn
+ close:move ram2,58 to ram
+ if i$<>"N" goto send3
+ return
+send2
+ if (i$="SYSOP") or (i$=sys$) then a=1:return
+ if not instr(" ",i$) print \on$"Sorry, No such user"of$:pop:return
+ open #1,"b:users"
+ setint(1):for x=1 to nu
+ if key(1) x=nu:setint(""):pop:return
+ position #1,128,x:input #1,d1$,d2$\d3$\d4,d5$
+ if (d1$+" "+d2$=i$) or (d1$+d2$=i$) a=x:x=nu:close:setint(""):return
+ next:close:setint("")
+ print \on$"Sorry, No such user"of$
+ pop:return
+send3
+ input @3 \"Subject -> "sb$:if sb$="":sb$="None"
+ print:f$="mail."+str$(a):gosub chkbox
+send4
+ print \"Registered Mail";:yn=2:gosub getyn
+ rg=(i$="Y"):sb$=left$(sb$,25)
+ if rg:st$="Registered Mail":else st$="Awaiting Reply"
+ gosub editor:if not edit(2) return
+ print \"Wait...";
+ ready mb$:if msg(0)=128 kill #msg(1):crunch
+ a=msg(0)+1
+ print #msg(a),date$" "time$\a3$" (#"un")",un\st$\sb$\rg
+ copy #8,#6:msg(a)=a:update:ready " ":print ".email sent"
+ return
+
+; bulk mailing
+bulk
+ print \"Bulk Mailing":f1=5:if flag(2) f1=25
+ f=0:clear #10
+bulk1
+ input @2 \"Send copy to: Name, #, <CR>: "i$
+ if (i$="") and (f=0) return
+ if i$="" goto bulk3
+
+ if left$(i$,1)="#" then i$=mid$(i$,2)
+ a=val(i$):if not a gosub bulk2
+ if (a<1) or (a>nu) print \"Sorry, No such user":goto bulk1
+ move ram,58 to ram2
+ open #1,"b:users":position #1,128,a
+ input #1,d1$,d2$\d3$:position #1,128,a,70:read #1,ram,58
+ if d1$="" close:move ram2,58 to ram:print \on$"Sorry, No such user"of$:goto bulk1
+ print \"Send to "d3$\"Last on - "when$;
+ yn=1:gosub getyn
+ close:move ram2,58 to ram
+ if i$="N" goto bulk1
+ 
+ f=f+1:print #10,a
+ if (f=f1) and (f1<>0) print "Bulk mail limit reached.":goto bulk3
+ goto bulk1
+
+bulk2
+ if (i$="SYSOP") or (i$=sys$) then a=1:return
+ if not instr(" ",i$) print \on$"Sorry, No such user"of$:pop:goto bulk1
+ open #1,"b:users"
+ setint(1):for x=1 to nu
+ if key(1) x=nu:setint(""):pop:goto bulk1
+ position #1,128,x:input #1,d1$,d2$\d3$\d4,d5$
+ if (d1$+" "+d2$=i$) or (d1$+d2$=i$) a=x:x=nu:close:setint(""):return
+ next:close:setint("")
+ print \on$"Sorry, No such user"of$
+ pop:goto bulk1
+
+bulk3
+ print #10,0:close
+ if not info(5) goto bulk4
+ fr$=a3$
+ print \"From -> "fr$ chr$(8,(len(fr$)));
+ input @3 i$:if i$<>"" fr$=i$
+ if fr$=a3$ y=un:else y=0
+bulk4
+ input @3 \"Subject -> "sb$:if sb$="" sb$="None"
+ rg=0:st$="Bulk Message"
+ gosub editor:if not edit(2) return
+ f1$="h:mbxtemp":kill f1$:create f1$:open #1,f1$:copy #8,#1:close
+ print \"Wait...";:mark(10)=0
+bulk5
+ input #10,a:if a=0 print ".email sent":kill f1$:return
+ mb$="g:mail."+str$(a):open #1,mb$:x=mark(1):close
+ if x gosub msg
+ ready mb$
+ c=msg(0)+1:print #msg(c),date$" "time$\fr$,y\st$\sb$\rg
+ copy f1$,#6:update:ready " "
+ print ".";:goto bulk5
+
+userlist
+ y=0:zz=0:print \"Send to printer";:yn=2:gosub getyn
+ print:if i$="Y" y=5
+ print #y,"###  User's Name             Last  On"
+ print #y,chr$(45,39)
+ close:x=1:open #1,"b:users
+usrlst2
+ f$="g:mail."+str$(x):open #2,f$:a=mark(2):close #2
+ if a goto usrlst3
+ zz=1:position #1,128,x:input #1,a$,b$\c$
+ position #1,128,x,70
+ move ram,58 to ram2:on nocar goto usrlst4
+ read #1,ram,58
+ setint(1):print #y,right$("  "+str$(x),3)"  ";
+ print #y,left$(c$+chr$(32,22),22)"  "when$
+ move ram2,58 to ram:on nocar goto link.term
+usrlst3
+ if (not key(1)) and (x<nu) then x=x+1:goto usrlst2
+ setint(""):close
+ if zz=0 print \"No users have mail."
+ return
+usrlst4
+ move ram2,58 to ram:goto link.term
+
+ ; read mail for the user currently logged in
+read
+ mb$="g:mail."+str$(un):rs=0
+read1
+ open #1,mb$:x=mark(1):close
+ if x print \on$"No mail for you"of$:ready " ":return
+ ready mb$:x=0
+read2
+ a=0:push read2:x=x+1:if x>msg(0) pop:ready " ":goto delete
+read3
+ input #msg(x),dt$\fr$,un$\st$\sb$\rs
+ print #a,\md$
+ print #a,"  From: "fr$
+ print #a,"  Date: "dt$
+ print #a,"Status: "st$
+ print #a,"  Subj: "sb$\
+ setint(2):copy #6,#a:setint(""):print #a,md$:if key(2) return
+read4
+ if rs gosub register
+ if i$="+" return
+ print \"A)uto reply, ["on$"N"off$"]ext, R)e-read, ";:if edit(3)<79 print
+ print "F)orward, D)elete, Q)uit";
+ l1$="ADFNQR"+cr$:gosub getone
+ if (i$="N") or (i$=chr$(13)) print "Next":return
+ if i$="Q" ready " ":print "Quit":pop:return
+ if i$="R" a=0:print "Re-read":goto read3
+ if i$="F" print "Forward":goto forward
+ if i$="A" print "Auto reply":goto reply
+ if i$="D" print "Delete":goto kill
+ if i$="+" return
+ if i$="P" and info(5) print "Print":a=5:goto read3
+
+;enter from logon seg if they want to read mail right away
+mailread
+ gosub browse:if a link "a:main.seg"
+ print \"Press a key to continue...";:get i$
+ gosub read:link "a:main.seg"
+
+; reply to someone message
+reply
+ z$=mb$:if left$(sb$,4)<>"Re: " sb$="Re: "+sb$
+ a=val(un$):f$="mail."+str$(a)
+ gosub chkbox
+ gosub send4:mb$=z$
+ ready mb$:return
+
+;forward a message to someone else
+forward
+ input @2 \"Forward to who: Name, #, <CR>: "i$:if i$="" goto read4
+ if left$(i$,1)="#" then i$=mid$(i$,2)
+ a=val(i$):if not a gosub forward2
+ if (a<1) or (a>nu) print \on$"Sorry, No such user"of$:goto read4
+ move ram,58 to ram2
+ open #1,"b:users":position #1,128,a
+ input #1,d1$,d2$\d3$:position #1,128,a,70:read #1,ram,58
+ if d1$="" close:move ram2,58 to ram:print \on$"Sorry, No such user"of$:goto read4
+ print \"Send to "d3$\"Last on - "when$;
+ yn=1:gosub getyn
+ close:move ram2,58 to ram
+ if i$<>"N" goto forward3
+ goto read4
+forward2
+ if (i$="SYSOP") or (i$=sys$) then a=1:return
+ if not instr(" ",i$) print \on$"Sorry, No such user"of$:pop:goto read4
+ open #1,"b:users"
+ setint(1):for x=1 to nu
+ if key(1) x=nu:setint(""):pop:goto read4
+ position #1,128,x:input #1,d1$,d2$\d3$\d4,d5$
+ if (d1$+" "+d2$=i$) or (d1$+d2$=i$) a=x:x=nu:close:setint(""):return
+ next:close:setint("")
+ print \on$"Sorry, No such user"of$:pop:goto read4
+
+forward3
+ print \"Registered Mail";:yn=2:gosub getyn
+ rg=(i$="Y"):sb$=left$(sb$,25)
+ input #msg(x),dt$\fr$,un$\st$\sb$\rs
+ edit(0):print #8,"  From: "fr$
+ print #8,"  Date: "dt$
+ print #8,"Status: "st$
+ print #8,"  Subj: "sb$\
+ copy #6,#8
+ z$=mb$:f$="mail."+str$(a):gosub chkbox
+ ready mb$:st$="Forwarded"
+ print \"Wait...";
+ if msg(0)=128 kill #msg(1):crunch
+ a=msg(0)+1
+ print #msg(a),date$" "time$\a3$" (#"un")",un\st$\sb$\rg
+ print #6,"   --> A Forwarded Email <--""
+ copy #8,#6:msg(a)=a:update:mb$=z$:ready mb$
+ print ".email forwarded"
+ goto read4
+
+;kill a message from someone mail file
+kill
+ if msg(0)=1 ready " ":kill mb$:pop:return
+ kill #msg(x):crunch:update
+ if x>msg(0) pop:ready " ":return
+ goto read3
+
+;Send registered mail receipt
+register
+
+; sysop can opt to not send the receipt
+ if info(5) print \"Send a receipt";:yn=1:gosub getyn:if i$="N" return
+
+;update message to show receipt having been sent
+ edit(0):input #msg(x),dt$\fr$,un$\st$\sb$\rs
+ copy #6,#8:rs=0:st$="Receipt Sent"
+ z=msg(x):kill #msg(x)
+ print #msg(x),dt$\fr$,un$\st$\sb$\rs
+ copy #8,#6:msg(x)=z:update
+
+;send the receipt
+ print "Sending receipt..."
+ z$=mb$:a=val(un$):f$="mail."+str$(a)
+ gosub chkbox:ready mb$
+ st$="Reciept Notice":if left$(sb$,4)<>"Re: " sb$="Re: "+sb$
+ rg=0:if msg(0)=128 kill #msg(1):crunch
+ edit(0)
+ print #8,"This email is to let you know that"
+ print #8,a3$" read your email on"
+ print #8,date$" at "time$
+ a=msg(0)+1
+ print #msg(a),date$" "time$\a3$" (#"un")",un\st$\sb$\rg
+ copy #8,#6:msg(a)=a:update:mb$=z$:ready mb$
+ print "Reciept Sent..."
+ return
+
+;find out if the user wants to delete their mailbox
+delete
+ print \"Delete mailbox";:yn=2:gosub getyn
+ if i$<>"Y" return
+delete1
+ ready " ":close:kill mb$
+ print \"Your Mailbox has been deleted"
+ return
+
+;show the user a quick summary of any waiting mail
+browse
+ mb$="g:mail."+str$(un)
+browse1
+ open #1,mb$:a=mark(1):close
+ if a print \on$"No mail for you"of$:ready " ":return
+ ready mb$:x=0:setint(1):print \s$
+ print \"### From                           Date     Time        R Subject"
+ print chr$(45,39);:if edit(3)>40 print chr$(45,40):else print
+browse2
+ x=x+1:if x>msg(0) ready " ":setint(""):return
+ input #msg(x),dt$\fr$,un$\st$\sb$\rg
+ print right$("00"+str$(x),3)" "left$(fr$+chr$(32,30),30)" ";
+ print left$(dt$+chr$(32,20),20)" ";
+ if rg print "Y ";:else print "N ";
+ print left$(sb$,20):if key(1) ready " ":setint(""):return
+ goto browse2
+
+; *** Sub - Routines ***
+
+;check mailbox status and create if not present
+chkbox
+ mb$="g:"+f$:open #1,mb$:x=mark(1):close
+ if not x ready " ":return
+ kill "h:mbxtemp":create "h:mbxtemp":open #1,"h:mbxtemp":copy #8,#1:close
+ print "Making Mailbox..."
+ gosub msg
+ open #1,"h:mbxtemp":edit(0):copy #1,#8:close:kill "h:mbxtemp"
+ ready " ":return
+
+; create mail file
+msg
+ kill mb$:create mb$:open #1,mb$:ed=edit(5):fill ed,255,0:poke ed,4:poke ed+1,4
+ write #1,ed,2:fill ed,255,0:for xz=1 to 4:write #1,ed,255:next
+ write #1,ed,10:close #1:ready " "
+ a$="T "+mb$+",BIN":use "b:xdos",a$
+ return
+
+;kill off the message file if not mail was sent
+abort
+ ready mb$:if not msg(0) kill mb$
+ ready " ":return
+
+; get a key
+; l1$ is the list of available keys
+getone
+ print ": ";
+getone.2
+ get i$
+ if instr(i$,l1$) return
+ goto getone.2
+
+; This routine gets a Yes/No answer
+; A prompt is printed, hilighting the default
+; response (if any)
+
+; Input parameters are:
+
+; yn	= 0:	No default
+; yn	= 1:	Default is yes
+; yn	= 2:	Default is no
+
+getyn
+ print " (";:l1$="YN"
+ if yn:l1$=l1$+chr$(13)
+ if yn=1 print "["on$"Y"of$"]";:else print "Y";
+ print "/";
+ if yn=2 print "["on$"N"of$"]";:else print "N";
+ print ")";:gosub getone
+
+ if i$=chr$(13):i$=mid$("YN",yn,1)
+ if i$="Y" print "Yes":else print "No"
+ yn=0:return
+
+; show a disk file
+show.file
+ setint(1):print \s$\:open #1,f$:if mark(1) close #1:return
+showfl2
+ copy (20) #1
+ if (eof(1) or key(1)) setint(""):close #1:return
+ if not flag(35) goto showfl2
+ print "Press ["on$"RETURN"off$"] ";:get i$:if i$=chr$(13) print " ";
+ print chr$(8,16);chr$(32,16);chr$(8,16);
+ if i$=" " setint(""):close #1:return
+ setint(1):goto showfl2
+
+;get minutes online & time limit
+time
+ x=(clock(2)-clock(1))/60:y=clock(2):x$=right$("0"+str$(x),2)
+ if clock(1)>clock(2) x$="!!"
+ if x=0 x$="--"
+ if not y x$="**"
+ if info(5) x$="::"
+ return
+
+; enter a message
+editor
+ on nocar goto editor1
+ print \"Enter message now, "edit(3)" cols, [4k] max"
+ print '[DONE] when finished, [.H] for help'
+ cl=clock(2):clock(2)=0:edit(0):edit(1):clock(2)=cl
+ if not edit(2) gosub abort
+ on nocar goto link.term:return
+editor1
+ pop:gosub abort:clock(2)=cl:goto link.term
+
+; report an error
+error
+ use "b:snapshot","b:snap.txt"
+ print\sc$"A fatal error has occured. One moment, please..."\
+ close:open #1,"b:error.list":position #1,32,err:input #1,er$:close
+ close:f$="b:sys.errors":create f$:open #1,f$:append #1
+ print #1,"Error #"err" ("er$") occurred in MAIL.SEG.S at "time$" on "date$"."
+ print #1,a1$" "a2$ "(#"un") was online when this occured."
+ open #2,"b:snap.txt":copy #2,#1
+ print #1,"----------------------------------------------------------------"
+ close:kill "b:snap.txt"
+ goto link.term

@@ -1,0 +1,4 @@
+: L -> Browse feedback mailbox       :
+: F -> Read feedback                 :
+: U -> Show users with mail          :
+::::::::::::::::::::::::::::::::::::::

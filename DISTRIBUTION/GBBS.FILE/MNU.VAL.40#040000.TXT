@@ -1,0 +1,21 @@
+BMEFGHOTU$ICLQDPVX?
+::::::::::::::::::::::::::::::::::::::
+:       List of Valid Commands       :
+::::::::::::::::::::::::::::::::::::::
+:   <(B)> Goto the Bulletin Boards   :
+::::::::::::::::::::::::::::::::::::::
+:          : E -> Examine your stats :
+:  (M)ail  : F -> Feedback  to Sysop :
+:          : G -> General files menu :
+:::::::::::: H -> Get detailed  help :
+: $ = News   O -> Other  BBS numbers :
+: I = Info   T -> Terminate  session :
+: C = Chat   U -> Get a user listing :
+::::::::::::::::::::::::::::::::::::::
+: L -> Log of twenty  recent callers :
+: Q -> Quick scan of bulletin boards :
+: D -> Define  system display  parms :
+: P -> Change / Update your password :
+: V -> Vote on your  computer equipt :
+: X -> Goto the  file  transfer area :
+::::::::::::::::::::::::::::::::::::::

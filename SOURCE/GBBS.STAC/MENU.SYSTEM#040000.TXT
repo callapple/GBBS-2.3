@@ -1,0 +1,18 @@
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:                   SuperTAC Sytem Level  Valid Commands                     :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+: D -> ProDOS Command                  : A -> About Users' Habits            :
+: C -> Catalog                         : Z -> Translog                       :
+: R -> Rename File                     : M -> Make Master Directory          :
+: L -> Lock File                       : N -> New Message Files              :
+: U -> Unlock File                     : V -> Volume Management              :
+: K -> Kill File                       : 1 -> Edit New Uploads               :
+: E -> Edit File                       : 2 -> Edit Downloads                 :
+: X -> Change Filetype                 : 3 -> Edit Abouts                    :
+: / -> Create Subdirectory             : 4 -> Edit Passwords                 :
+: S -> Show (print) Master Directory   :                                     :
+: F -> Free Space                      : Q -> Quit to SuperTAC               :
+: P -> Purge Files                     : T -> Terminate connection (Logoff)  :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

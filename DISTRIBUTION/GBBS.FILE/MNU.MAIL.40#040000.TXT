@@ -1,0 +1,13 @@
+BDR+STQ?
+::::::::::::::::::::::::::::::::::::::
+:        Mail  Valid Commands        :
+::::::::::::::::::::::::::::::::::::::
+: B -> Browse your mailbox           :
+: D -> Delete your mailbox           :
+: S -> Send a user Electronic Mail   :
+: R -> Read mail in your mailbox     :
+: + -> Dump all mail to the screen   :
+: T -> Terminate from System         :
+: Q -> Exit back to Main Level       :
+: ? -> See the Command List          :
+::::::::::::::::::::::::::::::::::::::
