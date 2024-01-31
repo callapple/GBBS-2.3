@@ -6,6 +6,8 @@
 *
 * May 1991, andy, changed to support interrupts
 * Memorial Day 1991, andy, support hayes ultra
+*
+* Jan 2024, paul lee, tcpser result codes
 *-------------------------------------------------
 
  lst off
@@ -40,6 +42,7 @@ SM_Con24 = 10 ;Modem 'CONNECT 2400'
 SM_Con48 = 11 ;Modem 'CONNECT 4800'
 SM_Con96 = 12 ;Modem 'CONNECT 9600'
 SM_Con19 = 14 ;Modem 'CONNECT 19200'
+SM_Con19_2 = 16 ;Modem 'CONNECT 19200'
 SM_Con38 = 28 ;Modem 'CONNECT 38400'
 
 SM_Car03 = 40 ;Modem 'CARRIER 300'
@@ -243,8 +246,15 @@ ring JSR GetNumber ;check for a char
  CMP Tbl_Conn,Y ;is it a valid code?
  BNE :TstCon1 ;nope, keep checking
 
+ CPY #7 ;check for second 19200 result code
+ BCC :TestCon2 ;nope
+ DEC ;yep. decrease index so makes sense in ACOS
+ DEY
+
+:TestCon2
+
  STA Connect ;save it so we can look at it in ACOS
- DEY ;reduce it one for setbaud
+ DEY ;reduce it one for setspd
 
 :RING3 JSR setspd ;set the correct speed
 
@@ -556,7 +566,7 @@ COUNTHI DB 0
 COUNTLO DB 0
 
 TmpField ds 4
-Tbl_Conn DFB 7,SM_Con03,SM_Con12,SM_Con24,SM_Con48,SM_Con96,SM_Con19
+Tbl_Conn DFB 8,SM_Con03,SM_Con12,SM_Con24,SM_Con48,SM_Con96,SM_Con19,SM_Con19_2
 Tbl_Carr DFB 6,SM_Car03,SM_Car12,SM_Car24,SM_Car48,SM_Car96
 DecByte hex 00
 

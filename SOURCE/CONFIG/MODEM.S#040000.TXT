@@ -34,6 +34,7 @@ generic ext
 epic ext
 datalink24 ext
 ultra9600 ext
+tcpser ext
 
 *-------------------------------
 * Reconfigure modem
@@ -68,7 +69,7 @@ re_mdm3 jsr TopBox
  asc ' 2 - Apple-Cat 103 - 300 baud',0d
  asc ' 3 - Apple-Cat 212 - 300/1200 baud',0d
  asc ' 4 - DC Hayes Micromodem II',0d
- asc ' 5 - Zoom Modem IIe',0d,0d
+ asc ' 5 - Zoom Modem IIe',0d
  asc ' 6 - Epic 2400 Classic II',0d
  asc ' 7 - Applied Engineering DataLink 2400',0d,0d
  asc ' 8 - Super Serial Card driver',0d
@@ -95,7 +96,7 @@ re_mdm3 jsr TopBox
  lda #>mdmdrv
  sta point1+1
 
- lda #12 ;default is generic
+ lda #14 ;default is generic
  asl a ;point init string to the
  tax ;right place
  lda strtable,x
@@ -119,7 +120,7 @@ re_mdm3 jsr TopBox
 
 :internal jmp getslot ;must have been internal, skip next
 
-:dl24 lda #14 ;datalink string is #14
+:dl24 lda #15 ;datalink string is #15
  hex 2c ;skip next instruction
 
 :epic24 lda #1 ;default for epic is &s1&d2
@@ -131,7 +132,7 @@ re_mdm3 jsr TopBox
 getinit jsr cls
  jsr print
  db 1,7,0
- asc 'Choose Modem:',0d,0d
+* asc 'Choose Modem:',0d
  asc ' 1 - Epic 2400 Plus',0d
  asc ' 2 - USRobotics Courier 2400',0d
  asc ' 3 - USRobotics Courier HST',0d
@@ -144,10 +145,11 @@ getinit jsr cls
  asc '10 - Hayes 2400',0d
  asc '11 - Hayes V-Series 9600',0d
  asc '12 - Hayes Ultra 9600/PP 9600sa'0d
- asc !13 - Generic 'AT' Compatible!,0d,0d
- asc 'Which? [1-13] ',00
+ asc '13 - TCPSER Modem Emulator'0d
+ asc !14 - Generic 'AT' Compatible!,0d,0d
+ asc 'Which? [1-14] ',00
 
- ldx #13
+ ldx #14
  jsr inpnum
  sta modemtype
 
@@ -320,7 +322,7 @@ getslot jsr cls
  jmp :notgsport
 
 :ultra ldx modemtype
- cpx #13 ; did they pick ULTRA/PP?
+ cpx #12 ; did they pick ULTRA/PP?
  bne :notgsport ; nope so go on
 
  cmp #1 ;was it port #1?
@@ -353,12 +355,23 @@ getslot jsr cls
  asc ' 3 -  2400 baud',0d
  asc ' 4 -  4800 baud',0d
  asc ' 5 -  9600 baud',0d
- asc ' 6 - 19200 baud',0d
- asc ' 7 - 38400 baud (only for v.32 modems)',0d,0d
- asc 'Which? [1-6] ',00
+ asc ' 6 - 19200 baud',0d,00
 
+ cmp #9
+ bne :ext2
+ jsr print
+ db 1,20,0
+ asc ' 7 - 38400 baud (only for v.32 modems)',0d,0d
+ asc 'Which? [1-7] ',00
  ldx #7
- jsr inpnum
+ jmp :ext3
+:ext2 jsr print
+ db 1,22,0
+ asc 'Which? [1-6] ',00
+ ldx #6
+
+:ext3 jsr inpnum
+
 :internal pha
 
 movepage ldx #3 ;move 3 illustrious pages
@@ -457,7 +470,8 @@ strtable dw 0
  da hayes2400 ;10
  da hayes9600 ;11
  da ultra9600 ;12
- da generic ;13
- da datalink24 ;14
+ da tcpser ;13
+ da generic ;14
+ da datalink24 ;15
 
 atastr asc 'ATA',0d,00

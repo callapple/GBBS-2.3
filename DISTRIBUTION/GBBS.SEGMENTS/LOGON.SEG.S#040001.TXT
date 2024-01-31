@@ -102,7 +102,7 @@ online
  print sc$:print "(*> Welcome to "sn$" <*)"
  if info(2)=128:x$="38400":else x$=str$(info(2)*300)
  if info(0) print \"Connect at ["x$"] baud!"
-; if info(0) gosub protocol:print \x$
+ if info(0) gosub protocol:print \x$
  print \'New users type "NEW"'
 
 logon
@@ -316,7 +316,8 @@ login2
  position #1,80,x
  print #1,a/60,a mod 60
  position #1,80,x,10
- print #1,d3$,date$" "time$,info(2)*300
+ if info(2)=128:x$="38400":else x$=str$(info(2)*300)
+ print #1,d3$,date$" "time$,x$
  mark(1)=0:print #1,x
  close
 
