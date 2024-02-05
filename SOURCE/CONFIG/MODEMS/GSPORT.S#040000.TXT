@@ -10,6 +10,9 @@
 *
 * 11/10/89 AMW
 * Added interrupt buffers
+*
+* 02/03/24 PHL
+* Additional result code for 19200
 *--------------------------
 
  lst off
@@ -32,6 +35,9 @@ INITSTR = $11D0
 ANSSTR = $11C0
 CDBYTE = $11BF
 BUFFER = $11A0
+
+
+
 
  do FLAG
  dsk rel/gsport2
@@ -229,7 +235,7 @@ RING JSR INP ;check for a char
 
 *===============================
 
-:NOTRING CMP #'1' ;is it a '1' or '10' or '11' or '12' or '14'?
+:NOTRING CMP #'1' ;is it a '1' or '10' or '11' or '12' or '14' or '16'?
  BEQ :GOTCODE ;yes, save it
  CMP #'5' ;is it connect 1200?
  BNE :NORING ;nope
@@ -280,7 +286,12 @@ RING JSR INP ;check for a char
  INY
  CMP #'4' ;is it 19200?
  BEQ :RING3
+
+ CMP #'6' ;also a 19200 code
+ BEQ :RING3
+
  BNE :NORING
+
 
 *===============================
 
