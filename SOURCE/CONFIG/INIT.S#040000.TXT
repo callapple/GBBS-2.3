@@ -879,6 +879,7 @@ list2 asc 'bbs',00
  asc 'snapshot',00
  asc 'xcat',00
  asc 'xdos',00
+ asc 'xcopy',00
  db 00
 
 

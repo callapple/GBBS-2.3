@@ -243,12 +243,13 @@ over2
  if hu$="Yes" goto link.term:else return
  
 scans
- ready v1$+":directory":gosub makestr
- x=val(vo$):kill #msg(x)
+ x=val(vo$)
  x$=v1$+str$(x)+":":if (fv>0) and (x>fv) x$=v2$+str$(x)+":"
+ gosub makestr
  use v1$+":xcat",0,x$,fn$,ta$,th$,bu$,mo$,mt$,xd$,xt$,by$
  clear #8
- print #msg(x),date$" "time$
+ ready v1$+":directory"
+ kill #msg(x):print #msg(x),date$" "time$
 scans1
  if fn$=chr$(32,15) copy #8,#6:goto scanend
  si=peek(ed+22)+peek(ed+23)*256
@@ -260,7 +261,7 @@ scans2
  call ed+3,0,fn$,ta$,th$,bu$,mo$,mt$,xd$,xt$,by$
  goto scans1
 scanend
- close:print ".Done **"
+ close:update:print ".Done **"
  return
 
 rbatch
@@ -589,10 +590,11 @@ time
 
 ; report an error
 error
+ close
  use "b:snapshot","b:snap.txt"
  print\sc$"A fatal error has occured. One moment, please..."\
- close:open #1,"b:error.list":position #1,32,err:input #1,er$:close
- close:f$="b:sys.errors":create f$:open #1,f$:append #1
+ open #1,"b:error.list":position #1,32,err:input #1,er$:close
+ f$="b:sys.errors":create f$:open #1,f$:append #1
  print #1,"Error #"err" ("er$") occurred in SUPERTAC.AUX.S at "time$" "fmtdate$"."
  print #1,a1$" "a2$ "(#"un") was online when this occured."
  copy "b:snap.txt",#1

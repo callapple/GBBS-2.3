@@ -714,10 +714,11 @@ time
 
 ; report an error
 error
+ close
  use "b:snapshot","b:snap.txt"
  print\sc$"A fatal error has occured. One moment, please..."\
- close:open #1,"b:error.list":position #1,32,err:input #1,er$:close
- close:f$="b:sys.errors":create f$:open #1,f$:append #1
+ open #1,"b:error.list":position #1,32,err:input #1,er$:close
+ f$="b:sys.errors":create f$:open #1,f$:append #1
  print #1,"Error #"err" ("er$") occurred in SUPERTAC.S at "time$" "fmtdate$"."
  print #1,a1$" "a2$ "(#"un") was online when this occured."
  copy "b:snap.txt",#1
