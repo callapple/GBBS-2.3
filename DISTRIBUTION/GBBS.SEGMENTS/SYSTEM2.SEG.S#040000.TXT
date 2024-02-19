@@ -143,8 +143,7 @@ ed.brd2
  print \" 7) Max  # of bulletins: "mb\" 8) Auto kill threshold: "kl
  print " 9) Bulletin # to kill: "kb
  print \"10) Abort without Saving"\"11) Save changes and Quit"
- input \"Option (1-11):" i$:a=val(i$):i$=""
- if i$="" or a=10 return
+ input \"Option (1-11):" i$:a=val(i$)
  if a=1 input @3 \"Board Name: "i$:if i$<>"" bn$=i$
  if a=2 input @2 \"File: "i$:if i$<>"" bf$=i$
  if a=3 input @2 \"Access Flag: "i$:if i$<>"" b3=val(i$)
@@ -162,10 +161,11 @@ ed.brd2
  if a=8 input @2 \"Auto Kill Threshold: "i$:if i$<>"" kl=val(i$)
  if kl<0 then kl=0
  if kl>mb then kl=mb
- if x=9 input @2 \"Bulletin # to Kill: "i$:if i$<>"" kb=val(i$)
+ if a=9 input @2 \"Bulletin # to Kill: "i$:if i$<>"" kb=val(i$)
  if kb<1 then kb=1
  if kl=0 then kb=0
  if kb>mb then kb=mb
+ if a=10 return
  if a<>11 goto ed.brd2
  print \"Updating..";
  open #1,"b:data2":position #1,128,bb+8
@@ -578,9 +578,10 @@ editor1
 
 ; report an error
 error
- close:use "b:snapshot","b:snap.txt"
+ close:on error:
+ use "b:snapshot","b:snap.txt"
  print\sc$"A fatal error has occured. One moment, please..."\
- open #1,"b:error.list":position #1,32,err:input #1,er$
+ open #1,"b:error.list":position #1,32,err:input #1,er$:close
  f$="b:sys.errors":create f$:open #1,f$:append #1
  print #1,"Error #"err"-"er$" occurred in SYSTEM2.SEG.S at "time$" on "date$"."
  print #1,a1$" "a2$ "(#"un") was online when this occured."\

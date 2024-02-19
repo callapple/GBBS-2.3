@@ -590,7 +590,7 @@ time
 
 ; report an error
 error
- close
+ close:on error:
  use "b:snapshot","b:snap.txt"
  print\sc$"A fatal error has occured. One moment, please..."\
  open #1,"b:error.list":position #1,32,err:input #1,er$:close

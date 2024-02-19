@@ -1,4 +1,4 @@
-To Build GBBS Pro v2.2 in Merlin 8/16 on a GS running GSOS:
+To Build GBBS Pro v2.3 in Merlin 8/16 on a GS running GSOS:
 
 Before you start, setup your source code in a directory on your GS similar to:
 
@@ -173,6 +173,7 @@ Your master GBBS.FILE folder should contain these files:
 	V1.4
 	WELCOME.EMAIL
 	XCAT
+	XCOPY
 	XDOS
 
 Your master GBBS.SEGMENTS folder should contain these files:
