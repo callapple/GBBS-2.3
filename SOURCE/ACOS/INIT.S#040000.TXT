@@ -430,7 +430,7 @@ EDMSGS DB -1
  ASC '.Ix   = Insert'0D
  ASC '.P = Prompt            '
  ASC '.Lx-Y = List'0D8D
-
+ ASC ' Bytes Used'0D8D
 *-------------------------------
 * compiler messages
 *-------------------------------
