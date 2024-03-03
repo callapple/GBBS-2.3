@@ -733,7 +733,7 @@ WEEK_MOD SEC ;subtract 7 till < 0
  ADC #7 ;add back in 7 for MOD
  RTS
 
-MTH_CNST DB 0,3,3,6,1,4,6,2,5,0,3,5
+MTH_CNST DB 1,4,4,0,2,5,0,3,6,1,4,6
 
 DATEPTR DB 0
 
