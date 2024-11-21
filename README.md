@@ -1,2 +1,2 @@
-# GBBS-2.3
-Repository for GBBS Pro 2.3
+# GBBS-2.x
+Repository for GBBS Pro 2.x
