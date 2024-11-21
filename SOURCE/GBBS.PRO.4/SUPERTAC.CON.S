@@ -1,0 +1,198 @@
+; *******************
+; GBBS "Pro" V:2.4
+; Copyright 1980-2024
+; Kevin M. Smallwood
+; *******************
+
+; SuperTAC Configure segment - 7/22/2023
+; Version 6.4
+; Written by Larry Hawkins
+; Updates and modifications by Paul Lee
+
+ public conall
+ public conset
+
+ on nocar goto link.term
+ on error goto error
+
+ gosub config
+ goto link.ae
+ 
+conall
+ on nocar goto link.term
+ on error goto error
+
+ print sc$\"Establishing Default Setting"
+ gosub columns:gosub directs:gosub hangs
+ gosub masters:gosub xmodems
+ nibble(14)=1
+ goto link.ae
+
+conset
+ on nocar goto link.term
+ on error goto error
+
+ gosub consets
+ goto link.ae
+
+link.term
+ close:link "a:main.seg","term1"
+
+link.ae
+ link "a:supertac","ae.ret"
+
+config
+ gosub time:print \"["x$"]["on$"SuperTAC Configure"off$"] ";
+ print "Option (?=Help)";:push config
+con2 
+ l1$="CDHMPQS?"+chr$(13):gosub getone
+ if (i$="Q") or (i$=chr$(13)) print "Quit":pop:goto link.ae
+ if i$="?" goto cmnds
+ if i$="S" print "Show current defaults":goto show.defaults
+ if i$="C" print "Directory Column Size":goto columns
+ if i$="D" print "Show Directy at Log":goto directs
+ if i$="H" print "Hang Up after Transfer":goto hangs
+ if i$="M" print "Master Directory Pause":goto masters
+ if i$="P" print "Transfer Protocol":goto xmodems
+ 
+cmnds
+ setint(1):copy v1$+":menu.con":setint(""):return
+
+show.defaults
+ print " "chr$(95,37)
+ print "|"chr$(32,37)"|"
+ print "| Transfer Protocol     : "xm$ chr$(32,(12-len(xm$)))"|"
+ print "| Master Directory Pause: "pe$ chr$(32,(12-len(pe$)))"|"
+ print "| Catalog Line Size     : "dx$" Columns" chr$(32,2)"|"
+ print "| Show Directory At Log : "gd$ chr$(32,(12-len(gd$)))"|"
+ print "| Hang Up After Transfer: "hu$ chr$(32,(12-len(hu$)))"|"
+ print "|"chr$(95,37)"|"\
+ return
+
+columns
+ print \"Choose Directory Column Size:" 
+ print " "chr$(95,27)" "
+ print "|"chr$(32,27)"|"
+ print "| ["on$" 2 "off$"] - 20 Column Catalog |"
+ print "| ["on$" 4 "off$"] - 40 Column Catalog |"
+ print "| ["on$" 8 "off$"] - 80 Column Catalog |"
+ print "|"chr$(95,27)"|"
+ print \"Choice";
+getcl
+ l1$="248":gosub getone
+ if i$="2" print "20 Column Catalogs":dx$="20":cc=0:nibble(10)=0:return
+ if i$="4" print "40 Column Catalogs":dx$="40":cc=1:nibble(10)=1:return
+ if i$="8" print "80 Column Catalogs":dx$="80":cc=2:nibble(10)=2:return
+
+directs
+ print\"Show Directory at Log";
+getds
+ yn=0:gosub getyn
+ if i$="N" gd$="No":nibble(11)=1:return
+ if i$="Y" gd$="Yes":nibble(11)=2:return
+
+hangs
+ print\"Hang Up after Transfer";
+gethu
+ yn=0:gosub getyn
+ if i$="N" hu$="No":nibble(12)=1:return
+ if i$="Y" hu$="Yes":nibble(12)=2:return
+
+masters
+ print\"Pause during Master Directory Listing";
+getma
+ yn=0:gosub getyn
+ if i$="N" pe$="No":nibble(13)=1:return
+ if i$="Y" pe$="Yes":nibble(13)=2:return
+
+xmodems
+ print \"Choose Transfer Protocol:" 
+ print " "chr$(95,33)" "
+ print "|"chr$(32,33)"|"
+ print "| ["on$" X "off$"] - Xmodem/Xmodem-1k/4modem |"
+ print "| ["on$" Y "off$"] - Ymodem          (Batch) |"
+ print "| ["on$" G "off$"] - Ymodem-G    (Streaming) |"
+ print "| ["on$" 4 "off$"] - Ymodem-4k   (Batch, 4k) |"
+ print "| ["on$" Z "off$"] - Zmodem          (Batch) |"
+ print "|"chr$(95,33)"|"
+ print \"Choice";
+getxm
+ l1$="XYG4Z":gosub getone
+ if i$="X" xm$="Xmodem":xm=1:nibble(8)=1:print xm$:return
+ if i$="Y" xm$="Ymodem":xm=2:nibble(8)=2:print xm$:return
+ if i$="G" xm$="Ymodem-G":xm=3:nibble(8)=3:print xm$:return
+ if i$="4" xm$="Ymodem-4k":xm=4:nibble(8)=4:print xm$:return
+ if i$="Z" xm$="Zmodem":xm=5:nibble(8)=5:print xm$:return
+
+consets
+ if ((nibble(8)<1) or (nibble(8)>5)) gosub xmodems
+ if (nibble(8)=1) xm$="Xmodem":xm=1
+ if (nibble(8)=2) xm$="Ymodem":xm=2
+ if (nibble(8)=3) xm$="Ymodem-G":xm=3
+ if (nibble(8)=4) xm$="Ymodem-4k":xm=4
+ if (nibble(8)=5) xm$="Zmodem":xm=5
+ if ((nibble(10)<0) or (nibble(10)>2)) gosub columns
+ cc=nibble(10):dx$="20":if cc=1 dx$="40":else if cc=2 dx$="80"
+ if ((nibble(11)<1) or (nibble(11)>2)) gosub directs
+ if nibble(11)=1 gd$="No":else gd$="Yes"
+ if ((nibble(12)<1) or (nibble(12)>2)) gosub hangs
+ if nibble(12)=1 hu$="No":else hu$="Yes"
+ if ((nibble(13)<1) or (nibble(13)>2)) gosub masters
+ if nibble(13)=1 pe$="No":else pe$="Yes"
+ return
+
+; *** sub - routines ***
+
+; get a key
+; l1$ is the list of available keys
+getone
+ print ": ";
+getone.2
+ get i$
+ if instr(i$,l1$) return
+ goto getone.2
+
+; This routine gets a Yes/No answer
+; A prompt is printed, hilighting the default
+; response (if any)
+
+; Input parameters are:
+
+; yn	= 0:	No default
+; yn	= 1:	Default is yes
+; yn	= 2:	Default is no
+
+getyn
+ print " (";:l1$="YN"
+ if yn:l1$=l1$+cr$
+ if yn=1 print "["on$"Y"of$"]";:else print "Y";
+ print "/";
+ if yn=2 print "["on$"N"of$"]";:else print "N";
+ print ")";:gosub getone
+
+ if i$=cr$:i$=mid$("YN",yn,1)
+ if i$="Y" print "Yes":else print "No"
+ yn=0:return
+
+; get time remaining before logoff
+time
+ x=(clock(2)-clock(1))/60:y=clock(2):x$=right$("0"+str$(x),2)
+ if clock(1)>clock(2) x$="!!"
+ if x=0 x$="--"
+ if not y x$="**"
+ if info(5) x$="::"
+ return
+
+; report an error
+error
+ close:on error:
+ use "b:snapshot","b:snap.txt"
+ print\sc$"A fatal error has occured. One moment, please..."\
+ open #1,"b:error.list":position #1,32,err:input #1,er$:close
+ f$="b:sys.errors":create f$:open #1,f$:append #1
+ print #1,"Error #"err" ("er$") occurred in SUPERTAC.CON.S at "time$" "fmtdate$"."
+ print #1,a1$" "a2$ "(#"un") was online when this occured."
+ copy "b:snap.txt",#1
+ kill "b:snap.txt"
+ print #1,"----------------------------------------------------------------"
+ close:goto link.term

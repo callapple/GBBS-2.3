@@ -1,0 +1,588 @@
+; *******************
+; GBBS "Pro" V:2.4
+; Copyright 1980-2024
+; Kevin M. Smallwood
+; *******************
+
+; msg segment - 1/6/2023
+
+ public bulletins
+
+bulletins
+ zz=0:fl=peek(2053)*256:pf=peek(fl):gosub start
+ flag(37)=1:gosub pfilter:goto link.main
+link.main
+ link "a:main.seg","return"
+link.term
+ link "a:main.seg","term1"
+
+; *** bulletins / e-mail ***
+
+start
+ on nocar goto link.term
+ on error goto error
+
+ a1=0:gosub idinf
+ if bf$="" print \on$"That board is down right now."of$:gosub cmd2c:return
+ if not b1 print \on$"You do not have access to that board."of$:gosub cmd2c:return
+ if i$="Q" gosub qscan
+cmd1
+ if msg(0) goto cmd2
+ print \"The "on$bn$of$\"has no bulletins..."
+ print \"Post a bulletin";:yn=1:gosub getyn
+ if i$="N" return
+ sb$="":ti$="All":d=0:gosub post:if not b2 return
+ goto cmd1
+
+cmd2
+ gosub time
+ free:print \on$bn$of$\"["x$"][Board #"bb"  1-"msg(0)"] ";
+ print "Option (?=Help)";
+ l1$="FRKSJQMNBGHPLT><?/123456789":gosub getone
+
+cmd2a
+ zz=0:push cmd2
+
+ if i$="F" goto cmd2b
+ if i$="R" goto cmd2b
+ if i$="K" goto cmd2b
+ if i$="S" goto cmd2b
+ if i$="J" goto cmd2b
+ if i$>"0" and i$<="9" goto cmd2b
+
+ if i$="Q" print "Quit":pop:return
+ if i$="M" print "Retrieve marked":goto mark
+ if i$="N" print "New bulletins":goto new
+ if i$="B" print "Search titles":goto browse
+ if i$="G" print "Global quickscan":goto qscan
+ if i$="H" print "Help":f$="b:hlp.msg":goto show.file
+ if i$="P" print "Post a bulletin":ti$="All":sb$="":d=0:goto post
+ if i$="L" print "List available boards":y=1:goto list
+ if i$="T" print "Terminate":goto terminate
+ if i$=">" and (bb<ab) print "Next board": bb=bb+1:zz=1:pop:goto start
+ if i$="<" and (bb>1) print "Previous board":bb=bb-1:zz=2:pop:goto start
+ if i$="?" or i$="/" print "Menu":goto cmd.menu
+
+cmd2b
+ print i$;:input @2 a$
+ if a$<>"" then i$=i$+a$
+ if left$(i$,1)="F" goto fwd
+ if left$(i$,1)="R" goto rvs
+ if left$(i$,1)="K" goto kill
+ if left$(i$,1)="S" goto scan
+ if i$="J" y=0:goto jump
+ if left$(i$,1)="J" then i$=mid$(i$,2):goto jmp3
+ a=val(i$):if (a>0) and (a<=msg(0)) i$="F"+i$:goto fwd
+ 
+cmd.menu
+ print '
+Read #, OR:  [N]ew   [F#]orward [S#]can [B]rowse [M]arked [L]ist
+             [R#]vse [G]lobal   [J#]ump [P]ost   [K#]ill  [H]elp
+             [Q]uit  [>] Next board     [<] Previous board
+
+Command letters followed with "#" have a numeric argument option.
+"F45" reads F)orward beginning at bulletin 45
+"K32" would K)ill bulletin #32"
+':return
+
+cmd2c
+ if not zz return
+ if zz=1 bb=bb+1
+ if zz=2 bb=bb-1
+ zz=0:pop:goto start
+
+; terminate connection
+
+terminate
+ print \"Terminate from "sn$
+ print \"Are you sure";:yn=2:gosub getyn
+ if i$<>"Y" return
+ link "a:main.seg","term1"
+
+; post a bulletin
+
+post
+ if not b2 print \on$"You do not have access to that board."of$:return
+ edit(0):if kl goto post2
+ if msg(0)=mb print \on$"Sorry, no room on this board."of$:return
+ if msg(0)=info(1) print \on$"Board directory full."of$:return
+ if info(6)<29 print \on$"Board bit-map full."of$:return
+post2
+ print \"Post Bulletin"\
+ if d open #1,"b:users":position #1,128,d:input #1,d1$,d2$\d3$:close
+ if d ti$=d3$+" (#"+str$(d)+")":if d=1 ti$="Sysop"
+ if ti$<>"" print "  To ->"ti$" (["on$"Y"of$"]/N):";:get i$
+ if i$=chr$(13) n=8:gosub backup:print:goto post2a
+ if i$="N" n=len(ti$)+9:gosub backup:input @4 ti$:if ti$="" return
+ if (ti$<>"") and left$(i$,1)<>"N" n=9:gosub backup:print
+ if ti$="" input @4 "  To ->"ti$:if ti$="" return
+post2a
+ i$="":if sb$<>"" print " Sub ->"sb$" (["on$"Y"of$"]/N):";:get i$
+ if i$=chr$(13) n=8:gosub backup:print:goto post2b
+ if i$="N" n=len(sb$)+9:gosub backup:input @4 a$:if a$="" return
+ if (sb$<>"" or a$<>"") and left$(i$,1)<>"N" n=9:gosub backup:print
+ if sb$="" input @4 " Sub ->"a$:if a$="" return
+ if a$<>"" sb$=a$
+post2b
+ a$=a3$:if (un=bs) and  (bs$<>"") a$=bs$
+ a$=a$+" (#"+str$(un)+")"
+ if not info(5) goto post2c
+ i$="":print "From ->"a$" (["on$"Y"of$"]/N):";:get i$
+ if i$=chr$(13) n=8:gosub backup:print:goto post2c
+ if i$="N" n=len(a$)+9:gosub backup:input @3 a$:if a$="" return
+ if (a$<>"") and left$(i$,1)<>"N" n=9:gosub backup:print
+post2c
+ i$="":if flag(36) print \"Anonymous Posting (Y/["on$"N"of$"]):";:get i$:print
+ if (flag(36)) and (i$="Y") flag(38)=1:else flag(38)=0
+ print \"Post: ["on$"Y"of$"]es, N)o, X)modem ";
+ l1$="YNX"+chr$(13):gosub getone
+ if i$="N" print "No":return
+ if i$="X" print "Xmodem":gosub up.xmdm:else print "Yes":gosub editor
+ if not edit(2) return
+ print \on$edit(2)of$" bytes entered"
+ print "Saving Message...wait..";:bp=bp+1
+ if (kl>0) and (kl<=msg(0)) kill #msg(kb):crunch:b=b-1
+ a=msg(0)+1
+ if flag(38) print #msg(a),"*"sb$:else print #msg(a),sb$
+ print #6,tn,ti$
+ if flag(38) print #6,0,a$:else print #6,un,a$
+ if flag(38) print #6,"Date ->"date$\:else print #6,"Date ->"date$"  "time$\
+ copy #8,#6:msg(a)=mn:mn=mn+1:update:tm=tm+1
+ print ".saved":ti$="":a$="":return
+
+; show new bulletins
+new
+ print \"New Bulletins"
+ if nn>msg(msg(0)) print \on$"No new bulletins"of$:return
+ x=msg(0):if not lr a=1:goto fwd2
+new1
+ if nn=<msg(x) a=x:x=x-1:if x goto new1
+ goto fwd2
+
+; bulletin retrieval - Forward
+fwd
+ if len(i$)>1 a=val(mid$(i$,2)):goto fwd1
+ print \"Sequential Retrieval - Forward"
+ input @2 \"Start where (#, F)irst, <CR>):" i$
+ a=val(i$):if i$="F" a=1
+fwd1
+ if a<1 return
+ if a>msg(0) a=msg(0)
+fwd2
+ print \s$\n$
+fwd3
+ gosub show:if x return
+ if a<msg(0) then a=a+1:goto fwd3
+ return
+
+; bulletin retrieval - Reverse
+rvs
+ if len(i$)>1 a=val(mid$(i$,2)):goto rvs1
+ print \"Sequential Retrieval - Reverse"
+ input @2 \"Start where (#, L)ast, <CR>):" i$
+ a=val(i$):if i$="L" a=msg(0)
+rvs1
+ if a<1 return
+ if a>msg(0) a=msg(0)
+rvs2
+ print \s$\n$
+rvs3
+ gosub show:if x return
+ if a>1 then a=a-1:goto rvs3
+ return
+
+; kill bulletins
+kill
+ if len(i$)>1 a=val(mid$(i$,2)):goto kill.1
+ print \"Kill a Bulletin"
+ input @2 \"Kill Bulletin (#,<CR>):" a
+kill.1
+ if (a<1) or (un=0) return
+ if a>msg(0) print \on$"That Bulletin Does Not Exist"of$:return
+ input #msg(a),a$\x,b$\x,c$
+ if (info(5)) or (un=bs) goto kill.2
+ if x<>un print \on$"Thats not your bulletin!"of$:return
+kill.2
+ if (flag(38)) and (left$(a$,1)="*") a$=mid$(a$,2)
+ print \"Numb ->"a" of "msg(0)\" Sub ->"a$
+ print \"Kill this bulletin";:yn=2:gosub getyn
+ if i$<>"Y" return
+kill.3
+ tm=tm-1:y=msg(msg(0)):kill #msg(a):crunch
+ b=msg(0):if b then msg(b)=y:update
+ print \"Bulletin #"on$aof$" killed..."
+ return
+
+; browse (search) bulletin titles
+browse
+ m$="":a=0:print \"Scan Bulletin Titles"
+ print \"Search for (<CR>=Everything, (Q)=Quit)"
+ input @3 ":" m$:a=1:if i$="Q" a=1:m$="":return
+ goto scan.2
+
+; scan bulletins
+scan
+ print \"Scan bulletins"
+ if len(i$)>1 a=val(mid$(i$,2):goto scan.1
+ input @3 \"Start at (#,<CR>):"a
+scan.1
+ m$="":if a<1 return
+ if a>msg(0) print \on$"That Bulletin Does Not Exist"of$:return
+scan.2
+ print \"Allow marking";:yn=2:gosub getyn
+ ms=0:if i$="Y" ms=a
+ d=0:x=15:print:z=flag:flag=ram2
+scan.3
+ a$=" ":if msg(a)>nn then a$="*"
+ flag(a-ms)=0:input #msg(a),t$\b,b$
+ if m$ if not instr(m$,t$) goto scan.4
+ if left$(t$,1)="*" t$=mid$(t$,2)
+ x=x-1:d=d+1:print a$a". "t$\"  Addressed to:"b$\
+ if i$<>"Y" goto scan.4
+ a$=i$:print "Mark (Y/["on$"N"of$"]/Q)";
+ l1$="YNQ"+chr$(13):gosub getone
+ if i$="Q" print "Quit":i$=a$:goto scan.5
+ if i$="Y" print "Yes":else print "No"
+ flag(a-ms)=(i$="Y"):i$=a$
+scan.4
+ if a=msg(0) goto scan.5
+ a=a+1:if x goto scan.3
+ a$=i$:print \"More (["on$"Y"of$"]/N/C)";
+ l1$="YNC"+chr$(13):gosub getone
+ if i$="C" print "Continue":x=msg(0)-a-1:i$=a$:goto scan.3
+ if i$<>"N" print "Yes":x=15:i$=a$:goto scan.3
+ print "No":i$=a$
+scan.5
+ me=a:flag=z:if not (d) print on$"Sorry, no match"of$:ms=0:return
+ if i$<>"Y" return
+
+; marked bulletins retrieval
+mark
+ print \"Retrieve marked bulletins":a=ms
+ if not ms print \on$"No marked bulletins"of$:return
+mark.2
+ z=flag:flag=ram2:b=flag(a-ms):flag=z
+ x=0:if b gosub show
+ if x=0 a=a+1:if a<me goto mark.2
+ return
+
+; jump to another board.
+jump
+ print \"Jump to Another Board"
+jmp2
+ print \"Jump to (1-"ab",?,<CR>):";
+ input @2 i$:if i$="" return
+jmp3
+ a=val(i$)
+ if (a>0) and (a<=ab) pop:bb=a:goto start
+ if i$<>"?" goto jmp2
+
+; list of available boards.
+list
+ print sc$\s$\:open #1,"b:data2"
+ for x=1 to ab:position #1,128,x+8
+ input #1,a$\b$\a:setint(1)
+ if instr(left$(a$,1),"#$%") a$=mid$(a$,2)
+ b=1:if a then b=flag(a)
+ if b and (b$<>"") print x". "a$
+ if key(1) setint(""):x=ab
+ next:close:if y return:else goto jmp2
+
+; global quickscan
+qscan
+ ob=bb:bb=1
+ print \"Global Quickscan...Spacebar Exits"
+qs1
+ setint (1):print \"Checking board: [";
+qs2
+ i$="":a$=right$("0"+str$(bb),2)
+ print on$a$of$"]";:gosub idinf:setint(1):if key(1) goto qs4
+ if (not b1) or (bf$="") or (msg(0)=0) goto qs3
+ if nn>msg(msg(0)) goto qs3
+ print \\"The "on$bn$of$\"contains new message(s)"
+ print \"["on$"R"of$"]ead S)kip Q)uit";
+ l1$="RSQ"+chr$(13):gosub getone
+ if i$="Q" print "Quit":return
+ if i$="S" print "Skip":goto qs3
+ print "Read"
+ gosub new:print \"Post a message";:yn=2:gosub getyn
+ if i$="Y" sb$="":ti$="":gosub post
+ i$="Y"
+qs3
+ bb=bb+1:if bb>ab goto qs4
+ if i$<>"" goto qs1
+ print chr$(8,3);:goto qs2
+qs4
+ if i$="" or i$=" " print
+ setint(""):bb=ob:goto idinf
+
+; bulletin show routine
+show
+ if nn<=msg(a) then nn=msg(a)+1
+ x=0:if lr<=msg(a) then lr=msg(a)+1
+show1
+ if flag(36) goto anony
+ input #msg(a),sb$\tn,ti$\d,fr$:setint(2)
+ print #x,\" Brd ->"bn$\"Numb ->"a" of "msg(0)\" Sub ->"sb$
+ print #x,"  To ->"ti$
+ print #x,"From ->"fr$
+show1a
+ copy #6,#x:x=0:setint("")
+ if key(1) x=1:return
+ if key(2) return
+show2
+ if i$="+" return
+ print \"[B"bb" #"a" of "msg(0)"] ? or Cmd [N]";
+ l1$="ABDNPQRTX+?"+chr$(13):if ((d=un) or info(5)) l1$=l1$+"EKSW"
+ gosub getone
+ if i$="?" print \\"A)uto-reply ["on$"N"of$"]ext B)ack R)eread T)race X)modem Q)uit D)ump"
+ if i$="?" and (d=un or info(5)) print "E)dit K)ill ";
+ if i$="?" and info(5) print "S)wap P)rint";
+ if i$="?" print
+ if i$="B" print "Back":a=a-1:if a<1 a=1
+ if i$="B" goto show
+ if i$="D" print "Dump":i$="+":return
+ if i$="+" return
+ if i$="N" or i$=chr$(13) print "Next":return
+ if i$="Q" print "Quit":x=1:return
+ if i$="R" print "Reread":goto show
+ if i$="P" and info(5) print "Print":x=5:goto show1
+ if i$="A" and flag(1) a$="":print "Answer":goto show5
+ if i$="A" print "Answer"\\on$"Security too low"of$:goto show2
+ if i$="X" print "Download":goto dn.xmdm
+ if (i$="T") and (x1=0) print "Trace":goto show7
+ if i$="T" print \\"Trace mode already active.":goto show2 
+ if not flag(1) goto show2
+ if not((d=un) or (info(5))) goto show2
+ if i$="E" and (flag(2) or info(5)) print "Edit":goto show4
+ if i$="W" and info(5) print "Write message":goto wrt.msg
+ if i$="S" and info(5) print "Swap":goto mov.msg
+ if i$<>"K" goto show2
+ print "Kill"\\"Kill: Are you Sure";:yn=2:gosub getyn
+ if i$<>"Y" goto show2
+ gosub kill.3:a=a-1:return
+show4
+ print \"Edit: Are you Sure";:yn=2:gosub getyn
+ if i$<>"Y" goto show2
+ edit(0):input #msg(a),a$\b,b$\c,c$\d$\e$
+ copy #6,#8:edit(1):if not edit(2) goto show2
+ x=msg(a):kill #msg(a):print #msg(a),a$\b,b$\c,c$\d$\e$
+ copy #8,#6:msg(a)=x:update:goto show2
+show5
+ print \"Is this a private letter";:yn=2:gosub getyn
+ if i$="Y" goto show6
+ if (d=0 and flag(36)) ti$="Anoymous User":goto show5a
+ open #1,"b:users":position #1,128,d
+ input #1,d1$,d2$\d3$:close:ti$=d3$
+show5a
+ if left$(sb$,3)<>"Re:" then sb$="Re: "+sb$
+ b=a:gosub post:a=b:goto show2
+show6
+ if d=0 print \on$"Sorry, anonymous sender"of$:goto show2
+ if left$(sb$,3)<>"Re:" then sb$="Re: "+sb$
+ f$="mail."+str$(d):gosub chkbox
+ print \"Registered Mail";:yn=2:gosub getyn
+ rg=(i$="Y"):sb$=left$(sb$,25)
+ if rg st$="Registered Mail":else st$="Awaiting Reply"
+ gosub editor:if not edit(2) gosub abort:ready bf$:goto show2
+ print \"Wait...";
+ ready mb$:if msg(0)=128 kill #msg(1):crunch
+ a=msg(0)+1
+ print #msg(a),date$" "time$\a3$" (#"un")",un\st$\sb$\rg
+ copy #8,#6:msg(a)=a:update:ready " ":print ".letter sent"
+ ready bf$:goto show2
+show7
+ x1=a:a=0:m$=sb$:if left$(m$,3)="Re:" m$=mid$(m$,5)
+ input @2 \"C)urrent, F)irst, Q)uit, #): "i$
+ a=val(i$)
+ if i$="C" a=x1
+ if i$="F" a=1
+ if (a=0) or (i$="") or (i$="Q") print \"Returning to bulletin options.":goto show7a
+ zz=0:gosub scan.2
+ print \"Trace completed. Returning you to your original message."
+show7a
+ a=x1:x1=0:x=0:goto show2
+
+wrt.msg
+ input @2 \"Filename (to write):" i$
+ if i$="" goto show2
+ create i$:open #1,i$:append #1
+ copy #msg(a),#1:close:goto show2
+
+mov.msg
+; Bulletin Mover From Al Anderson
+ print \\"Bulletin Mover Utility"\\"Boards 1-"ab
+ input @2 \"Move this post to board #" i$:zx=val(i$)
+ if (zx>ab) or (zx<1) goto show2
+ edit(0):input #msg(a),a$\b,b$\c,c$:copy #6,#8
+ x=msg(a):b5=bb:bb=zx:gosub idinf
+ if (kl>0)and(kl<=msg(0)) kill #msg(kb):crunch
+ zx=msg(0)+1:print #msg(zx),a$\b,b$\c,c$:copy #8,#6:msg(a)=zx:update
+ bb=b5:gosub idinf:msg(a)=x:print "On this board...";:gosub kill.3:a=a-1
+ print "Bulletin is now on other board.":goto show2
+
+;show a bulletin on anonymous boards.
+anony
+ input #msg(a),sb$\tn,ti$\d,fr$:setint(2)
+ if left$(sb$,1)="*" sb$=mid$(sb$,2):goto anony1
+ print #x,\" Brd ->"bn$\"Numb ->"a" of "msg(0)\" Sub ->"sb$
+ print #x,"  To ->"ti$
+ print #x,"From ->"fr$
+ goto show1a
+anony1
+ print #x,\" Brd ->"bn$\"Numb ->"a" of "msg(0)\" Sub ->"sb$
+ print #x,"  To ->"ti$
+ if info(5) print #x,"From ->"fr$:goto show1a
+ print #x,"From ->Anonymous Poster":goto show1a
+
+;xmodem d/l of bulletin by Keith Christian
+
+dn.xmdm
+ print \"Download bulletin #"a;
+ print " via Xmodem";:yn=2:gosub getyn
+ if i$<>"Y" return
+ f$="h:d":create f$:ready bf$:open #1,f$
+ input #msg(a),sb$\b,ti$\c,fr$:setint(2)
+ y=0:if left$(sb$,1)="*" sb$=mid$(sb$,2):y=1
+ print #1,\" Brd ->"bn$\Numb ->"a" of "msg(0)\" Sub ->"sb$
+ print #1,"  To ->"ti$
+ if y print #1,"From ->Anonymous Poster":else print #1,"From ->"fr$
+ copy #6,#1:close:print \"Ready to Send..."
+ use "b:protocol.down",110,0,f$:kill f$:goto show2
+
+;xmodem u/l of bulletin by Keith Christian
+
+up.xmdm
+ print \"Upload a message via Xmodem";:yn=1:gosub getyn
+ if i$="N" pop:return
+ print \"Ready to Receive..."
+ f$="h:u":use "b:protocol.up",110,0,f$
+ close:edit(0):copy f$,#8
+ print \edit(2)" bytes received"
+ kill f$:edit(1):ready bf$:return
+
+idinf
+ flag(36)=0:flag(37)=1:flag(38)=0
+ if bb=0 then bf$="":bl=0:return
+ me=0:bl=bb:open #1,"b:data2"
+ mark(1)=1120:input #1,ab
+ if bb>ab close:bf$="":bl=0:return
+ position #1,128,bb+8
+ input #1,bn$\bf$\b3,b4\bs,bs$\mb,kl,kb
+ if left$(bn$,1)="%" flag(36)=1:flag(37)=1:bn$=mid$(bn$,2)
+ if left$(bn$,1)="$" flag(36)=1:flag(37)=0:bn$=mid$(bn$,2)
+ if left$(bn$,1)="#" flag(36)=0:flag(37)=0:bn$=mid$(bn$,2)
+ b1=1:if b3 then b1=flag(b3)
+ b2=1:if b4 then b2=flag(b4)
+ close:if bf$="" then bl=0:return
+ if (b1) ready bf$:nn=nb
+pfilter
+ if not flag(37) poke fl,0:else poke fl,pf
+ return
+
+; *** sub - routines ***
+
+;check mailbox status and create if not present
+chkbox
+ mb$="g:"+f$:open #1,mb$:x=mark(1):close
+ if not x ready " ":return
+ kill "h:mbxtemp":create "h:mbxtemp":open #1,"h:mbxtemp":copy #8,#1:close
+ print "Making Mailbox..."
+ gosub msg
+ open #1,"h:mbxtemp":edit(0):copy #1,#8:close:kill "h:mbxtemp"
+ ready " ":return
+
+; create mail file
+msg
+ kill mb$:create mb$:open #1,mb$:ed=edit(5):fill ed,255,0:poke ed,4:poke ed+1,4
+ write #1,ed,2:fill ed,255,0:for xz=1 to 4:write #1,ed,255:next
+ write #1,ed,10:close #1:ready " "
+ a$="T "+mb$+",BIN":use "b:xdos",a$
+ return
+
+;kill off the message file if not mail was sent
+abort
+ ready mb$:if not msg(0) kill mb$
+ ready " ":return
+
+; backspace over text
+backup
+ print chr$(8,n);chr$(32,n);chr$(8,n);
+ return
+
+; get a key
+; l1$ is the list of available keys
+getone
+ print ": ";
+getone.2
+ get i$
+ if instr(i$,l1$) return
+ goto getone.2
+
+; This routine gets a Yes/No answer
+; A prompt is printed, hilighting the default
+; response (if any)
+
+; Input parameters are:
+
+; yn	= 0:	No default
+; yn	= 1:	Default is yes
+; yn	= 2:	Default is no
+
+getyn
+ print " (";:l1$="YN"
+ if yn:l1$=l1$+chr$(13)
+ if yn=1 print "["on$"Y"of$"]";:else print "Y";
+ print "/";
+ if yn=2 print "["on$"N"of$"]";:else print "N";
+ print ")";:gosub getone
+
+ if i$=chr$(13):i$=mid$("YN",yn,1)
+ if i$="Y" print "Yes":else print "No"
+ yn=0:return
+
+; show a disk file
+show.file
+ open #1,f$:if mark(1) close #1:return
+ setint(1):print \s$\
+showfl2
+ copy (20) #1
+ if (eof(1) or key(1)) setint(""):close #1:return
+ if not flag(35) goto showfl2
+ print "Press <"on$"RETURN"of$"> ";:l1$=chr$(13):gosub getone
+ print chr$(8,17);chr$(32,17);chr$(8,17);
+ if i$=" " setint(""):close #1:print:return
+ setint(1):goto showfl2
+
+; get time remaining before logoff
+time
+ x=(clock(2)-clock(1))/60:y=clock(2):x$=right$("0"+str$(x),2)
+ if clock(1)>clock(2) x$="!!"
+ if x=0 x$="--"
+ if not y x$="**"
+ if info(5) x$="::"
+ return
+
+; enter a message
+editor
+ on nocar goto editor1
+ print \"Enter message now, "edit(3)" columns, 4k max"
+ print "[DONE]  when finished,  [.H] for help"
+ cl=clock(2):clock(2)=0:edit(0):edit(1):clock(2)=cl
+ on nocar goto link.term:return
+editor1
+ pop:clock(2)=cl:goto link.term
+
+; report an error
+error
+ close:on error:
+ use "b:snapshot","b:snap.txt"
+ print\sc$"A fatal error has occured. One moment, please..."\
+ open #1,"b:error.list":position #1,32,err:input #1,er$:close
+ f$="b:sys.errors":create f$:open #1,f$:append #1
+ print #1,"Error #"err" ("er$") occurred in MSG.SEG.S at "time$" "fmtdate$"."
+ print #1,a1$" "a2$ "(#"un") was online when this occured."
+ copy "b:snap.txt",#1
+ kill "b:snap.txt"
+ print #1,"----------------------------------------------------------------"
+ close:goto link.term

@@ -1,10 +1,0 @@
-
-
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:                 SuperTAC Configure Defaults Valid Commands                 :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-: C -> Columns on Directory            : D = Dirctory at Log                 :
-: H -> Hang Up after Transfer          : M = Master Dir. Pause               :
-: P -> Packet Switching Network        : X = Xmodem Change                   :
-: Q -> Quit to SuperTAC                :                                     :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

@@ -1,0 +1,10 @@
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:                 SuperTAC Configure Defaults Valid Commands                 :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+: S -> Show Current Defaults           : D = Dirctory at Log                 :
+: C -> Columns on Directory            : M = Master Dir. Pause               :
+: H -> Hang Up after Transfer          : P = Protocol Change                 :
+: Q -> Quit to SuperTAC                :                                     :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

@@ -1,0 +1,292 @@
+; *******************
+; GBBS "Pro" V:2.4
+; Copyright 1980-2024
+; Kevin M. Smallwood
+; *******************
+
+; SuperTAC Translog segment - 7/22/2023
+; Version 6.4
+; Written by Larry Hawkins
+; Updates and modifications by Paul Lee
+
+sact
+ on nocar goto link.term
+ on error goto error
+ ld$=lc$
+sact1
+ push sact1
+ gosub time:print \\"["x$"]["on$"SuperTAC Translog"off$"] ";
+ print "Option (?=Help)";
+sact2 
+ l1$="MQST?":gosub getone
+ if i$="Q" print "Quit":pop:goto link.sys
+ if i$="M" goto trnstuf
+ if i$="S" goto tlog
+ if i$="T" goto terminate
+ if i$="?" goto cmnds
+ 
+cmnds
+ setint(1):print sc$:copy v1$+":menu.translog":setint(""):return
+ 
+trnstuf
+ print "Translog management"
+ print\chr$(45,33)
+ print" 1 - Update translog [remove all]"
+ print" 2 - Edit a translog"
+ print" 3 - Delete translog" 
+ print chr$(45,33)
+ print"Choice";
+ l1$="123"+cr$:gosub getone:if i$="1" goto do.updt
+ if i$="2" goto do.edt
+ if i$="3" goto do.delt
+ print "Exit"
+ return
+
+do.updt
+ print\\"This action deletes the previous translog file!"
+ print "Please be sure you want to remove the translog file!"\
+ print "Update the translog file";:yn=2:gosub getyn
+ if i$<>"Y" return
+ i$=v1$+":translog"
+ goto message
+
+do.edt
+ print "Edit translog"\
+ input @2 "Translog to edit:" i$:if i$="" return
+ ready v1$+":translog":ml=1:mh=msg(0)
+ a=val(i$):if (a<ml) or (a>mh) print on$"Translog out of range"of$:return
+ edit(0):input #msg(a),d$:copy #6,#8
+ print sc$:home
+ print \"Enter/Edit info now, "edit(3)" columns, 4k max"
+ print "[DONE]  when finished,  [.H] for help"
+ edit(1):if not edit(2) return
+ kill #msg(a):print #msg(a),d$:copy #8,#6:update:return
+
+do.delt
+ print "Delete translog"\
+ input @2 "Translog to delete:" i$:if i$="" return
+ ready v1$+":translog":ml=1:mh=msg(0)
+ a=val(i$):if (a<ml) or (a>mh) print on$"Translog out of range"of$:return
+ msg(a)=0:kill #msg(a):crunch:update:return
+
+message
+ ready " ":close:kill i$
+ create i$:open #1,i$:clear #8:ed=edit(5):fill ed,255,0:poke ed,16:poke ed+1,16
+ write #1,ed,2:fill ed,255,0:for xx=1 to 16:write #1,ed,255:next
+ write #1,ed,22:close:ready " "
+ a$="T "+i$+",BIN":use v1$+":xdos",a$
+ return
+
+tlog
+ print "Show Transaction Log"
+ print \"New Scan since (<CR> accepts):"ld$;
+ gosub chngdt
+ ready v1$+":translog"
+ print \"["on$""ld$""off$"] Scanning Translog..";
+ xx=msg(0):if not xx print "None":return
+tlog1
+ print ".";
+ input #msg(xx),d$
+ gosub check.date
+ if (d=0) and (xx=msg(0)) print "None":return
+ if d=0 print "Done"\:goto tlog2
+ xx=xx-1:if xx=0 print "Done"\:goto tlog2
+ goto tlog1
+tlog2
+ print "Dump to Printer";:yn=2:gosub getyn
+ if i$<>"Y" cn=0:else cn=5:goto tlog3
+ if cn=0 print \"Dump To File";:yn=2:gosub getyn
+ if i$<>"Y" cn=0:goto tlog3
+ cn=2
+ f$="USER.TRANSLOG":print \"Dump To (Filename): "f$;
+ print chr$(8,len(f$));:input @2 i$:if i$="" i$=f$
+ a$=v1$+i$:close:kill a$:create a$
+tlog3
+ print \"Uploads, Downloads, ["on$"B"of$"]oth";
+ l1$="UDB"+cr$:gosub getone
+ if i$="U" ud$="U":print "Uploads":goto tlog4
+ if i$="D" ud$="D":print "Downloads":goto tlog4
+ ud$="B":print "Both"
+tlog4
+ if cn=2 open #2,a$:append #2
+ sf=0:gosub print.head
+tlog5
+ xx=xx+1
+tlog6
+ if xx>msg(0) goto tlog7
+ input #msg(xx),d$\f$\v$\fr\pt$\bd\ty$\pt\te\bi\hl
+ setint(1):gosub get.baud:gosub get.pro:gosub get.time
+ if ud$<>"B" gosub check.ud:if np goto tlog5
+ lf=len(f$):pc=instr(":",f$):f$=right$(f$,(lf-pc))
+ f$=left$(f$+chr$(32,15),15)
+ v$=left$(v$+chr$(32,3),3)
+ fr$=left$(str$(fr)+chr$(32,4),4)
+ dt$=left$(d$,5)
+ tm$=mid$(d$,10,5)
+ a$=left$(a$+chr$(32,4),4)
+ xx$=right$(chr$(32,3)+str$(xx),3)
+ pt$=right$(chr$(32,3)+str$(pt),3)
+ te$=right$(chr$(32,4)+str$(te),4)
+ bi$=right$(chr$(32,5)+str$(bi),5)
+ sf=sf+1:print #cn,xx$" "f$"  "v$"  "fr$"  "dt$" "tm$"   "bd$" "a$"  "pt$"  "te$"  "bi$"  "hl$ 
+ setint(""):if key(1) goto tlog7
+ gosub check.foot:goto tlog5
+tlog7
+ if cn<>0 open #1,v1$+":error.prots"
+ if cn=2 print #2,\\\:copy #1,#2:close
+ if cn=5 print #5,chr$(12):copy #1,#5:close:print #5,chr$(12)
+ return
+
+print.head
+ if cn=0 print sc$:else if cn=5 print #5,chr$(12)
+ print #cn," #  Filename         Vol  User  Date---Time   BR  Prot  Ret  Terr  Block  Ttime"
+ print #cn,chr$(45,79)
+ return
+
+check.foot
+ if cn<>0 goto check.ft1
+ if not (sf mod 15) print "Press <CR> ";:get im$:gosub print.head
+ return
+check.ft1
+ if not (sf mod 60) gosub print.head
+ return
+
+check.date
+ if val(mid$(d$,7,2))>val(mid$(ld$,7,2)) d=1:return
+ if val(mid$(d$,7,2))<val(mid$(ld$,7,2)) d=0:return
+ if val(mid$(d$,1,2))>val(mid$(ld$,1,2)) d=1:return
+ if val(mid$(d$,1,2))<val(mid$(ld$,1,2)) d=0:return
+ if val(mid$(d$,4,2))>=val(mid$(ld$,4,2)) d=1:return
+ if val(mid$(d$,4,2))<val(mid$(ld$,4,2)) d=0:return
+ d=0:return
+
+check.ud
+ np=1:if ww$=ud$ np=0
+ return
+
+chngdt
+ print chr$(8,8);:input @2 i$
+ if i$="" return
+ if len(i$)<>8 return
+ if (mid$(i$,3,1)<>"/") or (mid$(i$,6,1)<>"/") return
+ a=val(mid$(i$,1,2)):if (a<1) or (a>12) return
+ a=val(mid$(i$,4,2)):if (a<1) or (a>31) return
+ a=val(mid$(i$,7,2)):if (a<1) or (a>99) return
+ ld$=i$:return
+
+get.baud
+ bd$="--":ap$=" ":if bd>100 bd=bd-100:ap$="P"
+ if bd=1 bd$="03"
+ if bd=4 bd$="12"
+ if bd=8 bd$="24"
+ if bd=16 bd$="48"
+ if bd=24 bd$="72"
+ if bd=32 bd$="96"
+ if bd=64 bd$="VF"
+ bd$=bd$+ap$
+ return
+
+get.pro
+ xy$=left$(pt$,1)
+ ww$=mid$(pt$,2,1)
+ tt=val(right$(pt$,1)
+ if xy$<>"Y" goto get.xpro
+ a$="Y"
+ if ww$="D" goto get.prod
+ if tt=2 a$="Y4"
+ goto get.ret
+get.prod
+ if tt=1 a$="YG"
+ if tt=2 a$="Y4"
+ goto get.ret
+get.xpro
+ if xy$<>"X" goto get.zpro
+ a$="X"
+ if tt=1 a$="XA"
+ if tt=2 a$="XC"
+ if tt=3 a$="XCA"
+ if tt=4 a$="X1"
+ if tt=5 a$="X1A"
+ if tt=6 a$="4"
+ if tt=7 a$="4A"
+ goto get.ret
+get.zpro
+ if xy$<>"Z" a$="----":return
+ a$="Z"
+get.ret
+ a$=ww$+a$
+ return
+
+get.time
+ a=hl/60:b=hl mod 60
+ hl$=right$("  "+str$(a),2)+":"+right$("00"+str$(b),2)
+ return
+
+terminate
+ print "Terminate"
+ print \"Terminate from "sn$
+ print \"Are you sure";:yn=2:gosub getyn
+ if i$<>"Y" return
+ pop: link "a:main.seg","term1"
+ 
+link.term
+ link "a:main.seg","term1"
+
+link.sys
+ link "a:supertac.sys"
+
+; *** sub - routines ***
+
+; get a key
+; l1$ is the list of available keys
+getone
+ print ": ";
+getone.2
+ get i$
+ if instr(i$,l1$) return
+ goto getone.2
+
+; This routine gets a Yes/No answer
+; A prompt is printed, hilighting the default
+; response (if any)
+
+; Input parameters are:
+
+; yn	= 0:	No default
+; yn	= 1:	Default is yes
+; yn	= 2:	Default is no
+
+getyn
+ print " (";:l1$="YN"
+ if yn:l1$=l1$+cr$
+ if yn=1 print "["on$"Y"of$"]";:else print "Y";
+ print "/";
+ if yn=2 print "["on$"N"of$"]";:else print "N";
+ print ")";:gosub getone
+
+ if i$=cr$:i$=mid$("YN",yn,1)
+ if i$="Y" print "Yes":else print "No"
+ yn=0:return
+
+; get time remaining before logoff
+time
+ x=(clock(2)-clock(1))/60:y=clock(2):x$=right$("0"+str$(x),2)
+ if clock(1)>clock(2) x$="!!"
+ if x=0 x$="--"
+ if not y x$="**"
+ if info(5) x$="::"
+ return
+
+; report an error
+error
+ close:on error:
+ use "b:snapshot","b:snap.txt"
+ print\sc$"A fatal error has occured. One moment, please..."\
+ open #1,"b:error.list":position #1,32,err:input #1,er$:close
+ f$="b:sys.errors":create f$:open #1,f$:append #1
+ print #1,"Error #"err" ("er$") occurred in SUPERTAC.LOG.S at "time$" "fmtdate$"."
+ print #1,a1$" "a2$ "(#"un") was online when this occured."
+ copy "b:snap.txt",#1
+ kill "b:snap.txt"
+ print #1,"----------------------------------------------------------------"
+ close:goto link.term

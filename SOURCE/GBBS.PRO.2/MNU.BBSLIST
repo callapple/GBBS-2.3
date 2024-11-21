@@ -1,0 +1,9 @@
+::::::::::::::::::::::::::::::::::::::
+:      BBS List  Valid Commands      :
+::::::::::::::::::::::::::::::::::::::
+: A -> Add a listing                 :
+: D -> Delete a listing              :
+: L -> List BBS systems              :
+: S -> Search BBS systems            :
+: Q -> Exit back to Main Level       :
+::::::::::::::::::::::::::::::::::::::

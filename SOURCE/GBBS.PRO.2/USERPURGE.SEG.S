@@ -1,0 +1,198 @@
+; *******************
+; GBBS "Pro" V:2.4
+; Copyright 1980-2024
+; Kevin M. Smallwood
+; *******************
+
+; purge segment rev a - 1/4/2023
+
+ on nocar goto link.term
+ on error goto error
+
+; purge users from system
+purge
+ print sc$ "Purge a group of users:"
+ z=0:zz=0:print '
+Delete normal users who have not called
+since: (Use [RETURN] to kill no users)'
+ input @2 \"[XX/XX/XX] ? ";i$
+ if i$="Q" then return
+ if i$="" then dn$=da$:goto purge1
+ gosub get.date:if zz goto purge
+ dn$=a$
+purge1
+ zz=0:print '
+Delete special users (those users who
+have a percent (%) sign in their phone
+number) who have not called since:'
+ input @2 \"[XX/XX/XX] ? ";i$
+ if i$="Q" then return
+ if i$="" then ds$=da$:goto purge2
+ gosub get.date:if zz goto purge1
+ ds$=a$
+purge2
+ print '
+Wait for Sysop verification before
+killing old users or kill automati-
+cally?
+
+Wait for verification';
+ yn=1:gosub getyn
+ if i$="N" i$="Automatic":p=0:else i$="Manual":p=1
+
+ print sc$
+ print "Userpurge parameter summary:"\
+ print \"Kill normal before: "dn$
+ print \"Kill special before: "ds$
+ print \"Program mode: "i$
+ print \\"Is the above correct";:yn=1:gosub getyn
+ if i$="N" goto purge
+
+; let's do it
+
+purge3
+ x=2:a=0:b=0:c=0
+ move ram,58 to ram2
+ on nocar goto purge9
+ open #1,"b:users"
+ open #2,f$:append #2
+ print \\"Scanning..."
+purge4
+ position #1,128,x:input #1,a$,b$\c$\d$,e$
+ if a$="" a=a+1:goto purge8
+ position #1,128,x,70
+ read #1,ram,58
+ if flag(34):goto purge8
+ y$=right$(when$,2)+left$(when$,2)+mid$(when$,4,2)
+ if mid$(ph$,8,1)="%" goto purge5
+
+; normal users
+ x$=right$(dn$,2)+left$(dn$,2)+mid$(dn$,4,2)
+ if y$>=x$ goto purge8
+ if p=0 goto purge7
+ goto purge6
+
+; special users
+purge5
+ x$=right$(ds$,2)+left$(ds$,2)+mid$(ds$,4,2)
+ if y$>=x$ goto purge8
+ if p=0 goto purge7
+
+;prompt for deletion
+purge6
+ c=c+1:print sc$
+ print "#"left$(str$(x)+"   ",3)c$
+ print "of  "d$", "e$
+ print \"Last Date On: "when$
+ print \"Delete this user";:yn=2:gosub getyn
+ if i$<>"Y":goto purge8
+
+; auto delete no prompt
+purge7
+ print #2,left$(c$+chr$(32,21),21)" "when$" "da$
+ a$="":b$="":c$="":d$="":e$=""
+ position #1,128,x
+ print #1,a$,b$\c$\d$,e$
+ kill "g:mail."+str$(x)
+ a=a+1:b=b+1
+
+; do the next user
+purge8
+ if x<nu:x=x+1:goto purge4
+ close
+ move ram2,58 to ram
+ on nocar goto link.term
+
+; finish up
+ print sc$
+ print "Userpurge Result Summary:"
+ print \"Total number of user slots: "nu
+ print \"Total number of users considered: "c
+ print \"Total number of users purged: "b
+ print \"Total number of free slots: "a
+ print \\"Press [RETURN] to continue";
+ l1$=chr$(13):gosub getone:print
+ link "a:system.seg"
+
+purge9
+ move ram2,58 to ram
+ close:goto link.term
+
+; *** sub-routines ***
+
+get.date
+ if len(i$)<>8 print \"Follow given format, please.":zz=1:return
+ a$=left$(i$,2)+"/"+mid$(i$,4,2)+"/"+right$(i$,2)
+;force only numbers
+ for l=1 to 2:x=asc(mid$(a$,l,1)):if x<48 or x>57 l=2:next:goto bad.date
+ next
+ for l=4 to 5:x=asc(mid$(a$,l,1)):if x<48 or x>57 l=5:next:goto bad.date
+ next
+ for l=7 to 8:x=asc(mid$(a$,l,1)):if x<48 or x>57 l=8:next:goto bad.date
+ next
+ mm=val(mid$(a$,1,2)):dd=val(mid$(a$,4,2)):yy=val(mid$(a$,7,2))
+
+;1-12 for month, 0-99 for year
+ if mm<1 or mm>12 print \"Month is invalid.":zz=1:return
+ if yy<0 or yy>99 print \"Year is invalid." zz=1:return
+
+;days per month
+ a=31
+ if (mm=4) or (mm=6) or (mm=9) or (mm=11):a=30
+ if mm=2:a=28
+;leap year
+ if (mm=2) and not (yy mod 4):a=29
+ if dd<1 or dd>a print \"Day is invalid.":zz=1
+ return
+
+bad.date 
+ print \"Invalid entry.":zz=1:return
+
+; get a key
+; l1$ is the list of available keys
+getone
+ print ": ";
+getone.2
+ get i$
+ if instr(i$,l1$) return
+ goto getone.2
+
+; This routine gets a Yes/No answer
+; A prompt is printed, hilighting the default
+; response (if any)
+
+; Input parameters are:
+
+; yn	= 0:	No default
+; yn	= 1:	Default is yes
+; yn	= 2:	Default is no
+
+getyn
+ print " (";:l1$="YN"
+ if yn:l1$=l1$+chr$(13)
+
+ if yn=1 print "["on$"Y"of$"]";:else print "Y";
+ print "/";
+ if yn=2 print "["on$"N"of$"]";:else print "N";
+ print ")";:gosub getone
+
+ if i$=chr$(13):i$=mid$("YN",yn,1)
+ if i$="Y" print "Yes":else print "No"
+ yn=0:return
+
+link.term
+ link "a:main.seg","term1"
+
+; report an error
+error
+ close:on error:
+ use "b:snapshot","b:snap.txt"
+ print\sc$"A fatal error has occured. One moment, please..."\
+ open #1,"b:error.list":position #1,32,err:input #1,er$:close
+ f$="b:sys.errors":create f$:open #1,f$:append #1
+ print #1,"Error #"err" ("er$") occurred in USERPURGE.SEG.S at "time$" on  "date$"."
+ print #1,a1$" "a2$ "(#"un") was online when this occured."
+ open #2,"b:snap.txt":copy #2,#1
+ print #1,"----------------------------------------------------------------"
+ close:kill "b:snap.txt"
+ goto link.term

@@ -1,17 +1,0 @@
-
-
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:                          SuperTAC  Valid Commands                          :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-: S -> Send File                       : L -> Log a new Volume               :
-: R -> Receive File                    : D -> Directory                      :
-: V -> View File                       : M -> Master Directory               :
-: C -> Copy-Incoming                   : I -> Info on Files                  :
-: B -> Binary II Lister                : Y -> Your Status                    :
-: W -> What goes where                 : X -> Change Defaults                :
-: N -> New Uploads                     : F -> Free Space                     :
-: Q -> Quit back to main               : T -> Terminate connection (Logoff)  :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:            Arrow Keys move up and down 1 volume:    <-- and -->            :
-:            Up and down arrows move 10 Volumes                              :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

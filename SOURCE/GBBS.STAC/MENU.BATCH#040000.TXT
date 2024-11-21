@@ -1,16 +1,0 @@
-
-
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:                   SuperTAC Batch Level  Valid Commands                     :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-: A -> Add to batch                    : S -> Show batch list                :
-: B -> Begin transfer                  : K -> Kill a file frombatch list     :
-: D -> Directory                       : C -> Clear current batch list       :
-: L -> Log a new volume                : R -> Restore file batch             :
-: V -> View files                      :                                     :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:         When adding files, combinations of the following are valid         :
-:                                1-3,4,7,9-11                                :
-:            Arrow Keys move up and down 1 volume:    <-- and -->            :
-:            Up and down arrows move 10 Volumes                              :
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

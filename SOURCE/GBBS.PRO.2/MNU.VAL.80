@@ -1,0 +1,17 @@
+BCDEFGHILMOPQRTUVX$
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:                           List of Valid Commands                           :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:                       <(B)> Goto the Bulletin Boards                       :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+: M -> Read and Send Mail             : E -> Examine your system status      :
+: R -> Recreation Room                : F -> Feedback to the Sysop           :
+: G -> General files menu             : H -> See the detailed help file      :
+: $ -> Read the latest System News    : O -> Other BBS numbers               :
+: I -> Read System Information        : T -> Terminate connection (Logoff)   :
+: C -> Chat With the Sysop            : U -> See list of users on system     :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+: Q -> Quick scan of bulletin boards  : D -> Define  system display  parms   :
+: P -> Change / Update your password  : V -> Vote on your  computer equipt   :
+: L -> Log of twenty  recent callers  : X -> Goto the file  transfer  area   :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

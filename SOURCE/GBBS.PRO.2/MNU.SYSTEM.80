@@ -1,0 +1,16 @@
+BCDEFGKLNPQRSTUWX!*?
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:                        System Level  Valid Commands                        :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+: B -> Board Maintanence              : C -> Configure System Parameters     :
+: D -> DOS commands                   : E -> Edit Security Flags             :
+: F -> Show a text file               : G -> Get (edit) a text file          :
+: K -> Kill a Users Account           : L -> View System Logs                :
+: N -> Add a New User                 : P -> Edit a users Account            :
+: R -> Read request file              : S -> Set a new date                  :
+: U -> Userlist                       : W -> Update System News              :
+: X -> Upload/Download files          : * -> Edit Auto Validation            :
+: ! -> Purge users                    :                                      :
+:                                     :                                      :
+: T -> Terminate Connection           : Q -> Quit to Main Level              :
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
