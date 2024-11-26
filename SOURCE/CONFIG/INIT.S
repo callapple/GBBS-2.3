@@ -940,8 +940,8 @@ list2a asc 'data',00
 * files on disk3
 
 list3 asc 'acos.time',00
- asc 'protocol.down40',00
- asc 'protocol.up40',00
+ asc 'prot.down',00
+ asc 'prot.up',00
  asc 'snapshot',00
  asc 'xcat',00
  asc 'xcopy',00
@@ -970,9 +970,7 @@ list3d asc 'blackjack.s',00
  db 00
 
 list3e asc 'protocol.down',00
- asc 'protocol.down1k',00
  asc 'protocol.up',00
- asc 'protocol.up1k',00
  asc 'rz.load',00
  asc 'sz.load',00
  asc 'rz',00

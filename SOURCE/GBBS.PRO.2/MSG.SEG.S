@@ -448,7 +448,7 @@ dn.xmdm
  print #1,"  To ->"ti$
  if y print #1,"From ->Anonymous Poster":else print #1,"From ->"fr$
  copy #6,#1:close:print \"Ready to Send..."
- use "b:protocol.down",110,0,f$:kill f$:goto show2
+ use "b:prot.down",110,0,f$:kill f$:goto show2
 
 ;xmodem u/l of bulletin by Keith Christian
 
@@ -456,7 +456,7 @@ up.xmdm
  print \"Upload a message via Xmodem";:yn=1:gosub getyn
  if i$="N" pop:return
  print \"Ready to Receive..."
- f$="h:u":use "b:protocol.up",110,0,f$
+ f$="h:u":use "b:prot.up",110,0,f$
  close:edit(0):copy f$,#8
  print \edit(2)" bytes received"
  kill f$:edit(1):ready bf$:return

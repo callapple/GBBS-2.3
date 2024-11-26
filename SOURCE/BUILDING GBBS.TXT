@@ -182,8 +182,8 @@ Your master GBBS.PRO.3 folder should contain these files:
 	XCOPY
 	XDOS
 	XSHOW
-	PROTOCOL.DOWN40
-	PROTOCOL.UP40
+	PROT.DOWN
+	PROT.UP
 	G1
 	G1.1
 	G1.2
@@ -202,8 +202,6 @@ Your master GBBS.PRO.3 folder should contain these files:
 	RZ
 	PROTOCOL.DOWN
 	PROTOCOL.UP
-	PROTOCOL.DOWN1K
-	PROTOCOL.UP1K
 	ACCESS
 	MENU.BATCH
 	MENU.CON

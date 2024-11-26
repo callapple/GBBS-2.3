@@ -9,7 +9,7 @@
  on nocar goto link.term
  on error goto error
 
- ed=edit(5):dd=255
+ ed=edit(5):dd=110
 
 system
  gosub time
@@ -425,7 +425,7 @@ upload
  print  "---------------------------------------";:get i$:print
  if i$<>chr$(13) print on$"Aborted"of$:return
  print "Receving via Xmodem..<CTRL-X> to Cancel"\
- i$=lg$+f$:use "b:protocol.up40",dd,0,i$
+ i$=lg$+f$:use "b:prot.up",dd,0,i$
  if (peek(10)=255) print \\"Error in transfer...["on$"Aborted"off$"]":return
  gosub dtype:print \bi" ProDOS Blocks Received" 
  return
@@ -447,7 +447,7 @@ download
  print  "---------------------------------------";:get i$:print
  if i$<>chr$(13) print on$"Aborted"of$:return
  print "Sending via Xmodem...<CTRL-X> to Cancel"
- i$=lg$+f$:use "b:protocol.down40",dd,0,i$
+ i$=lg$+f$:use "b:prot.down",dd,0,i$
  if peek(10)=255 print \\"Error in transfer...[Aborted]"
  return
 

@@ -286,7 +286,7 @@ down1a
  open #1,"a:supertac.s":a=mark(1):close
  if not a pop:link "a:supertac"
 
- a$="d:d1":dd=255
+ a$="d:d1":dd=110
  open #1,a$:input #1,x,d3$:close
  if d3$<>"" d3$=chr$(13)+d3$+chr$(13)
  b$=left$(a$,instr(":",a$))
@@ -309,7 +309,7 @@ down2a
  print \"Download "j$", "on$;bi;of$" blocks" 
  print "Press <"on$"CR"of$"> to begin";:l1$=chr$(13):gosub getone
  print \"Sending via Xmodem..."\:close
- use "b:protocol.down40",dd,0,f$
+ use "b:prot.down",dd,0,f$
  if peek(10)>0 print on$"[Error]"of$"...Transfer Aborted":goto down2
  print on$"Transfer Successful"of$ 
  dl=dl+1:d2=d2+bi:if d2>9999 d1=d1+1:d2=d2-10000
@@ -342,7 +342,7 @@ upload3
  if a print \on$"Illegal filename"of$:goto upload2
  print "Press <"on$"CR"of$"> to begin";:l1$=chr$(13):gosub getone
  print \"Receiving via Xmodem..."\:close
- use "b:protocol.up40",dd,0,f$
+ use "b:prot.up",dd,0,f$
  if peek(10)>0 print on$"[Error]"of$"...Transfer Aborted":goto down2
  open #1,f$:a=mark(1):if a print on$"[Error]"of$"...Transfer Aborted":close:goto down2
  bi=size(1)*2+1:close
